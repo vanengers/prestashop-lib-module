@@ -1,0 +1,10 @@
+services:
+  #    Installers
+  vanengers.base_module.lib.installer:
+    class: 'Vanengers\PrestashopLibModule\Module\Service\Installation\Installer'
+
+  vanengers.base_module.lib.uninstaller:
+    class: 'Vanengers\PrestashopLibModule\Module\Service\Installation\Uninstaller'
+
+  vanengers.base_module.lib.migrator:
+    class: 'Vanengers\PrestashopLibModule\Module\Service\Migration\DatabaseMigrator'

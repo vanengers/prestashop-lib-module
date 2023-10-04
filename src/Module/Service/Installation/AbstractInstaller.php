@@ -4,13 +4,14 @@ namespace Vanengers\PrestashopLibModule\Module\Service\Installation;
 
 use Db;
 use Exception;
+use Module;
 use Vanengers\PrestashopLibModule\Module\BaseModule;
 
 abstract class AbstractInstaller
 {
     /**
-     * @param BaseModule $module
+     * @param Module $module
      * @return bool
      */
-    abstract public function init(BaseModule $module): bool;
+    abstract public function init(Module $module): bool;
 }

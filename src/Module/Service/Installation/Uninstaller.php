@@ -5,22 +5,23 @@ namespace Vanengers\PrestashopLibModule\Module\Service\Installation;
 use Configuration;
 use Db;
 use Exception;
+use Module;
 use Vanengers\PrestashopLibModule\Module\BaseModule;
 use Vanengers\PrestashopLibModule\Module\Service\Migration\DatabaseMigrator;
 
 class Uninstaller extends AbstractInstaller
 {
     /**
-     * @var BaseModule
+     * @var Module
      */
-    private BaseModule $module;
+    private Module $module;
 
     /**
-     * @param BaseModule $module
+     * @param Module $module
      * @return bool
      * @throws Exception
      */
-    public function init(BaseModule $module) : bool
+    public function init(Module $module) : bool
     {
         $this->module = $module;
 

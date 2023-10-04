@@ -1,4 +1,7 @@
 services:
+  _defaults:
+    public: true
+
   #    Installers
   vanengers.base_module.lib.installer:
     class: 'Vanengers\PrestashopLibModule\Module\Service\Installation\Installer'

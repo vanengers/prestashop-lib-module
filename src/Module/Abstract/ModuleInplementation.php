@@ -30,8 +30,8 @@ trait ModuleInplementation
 
     /** ---------------------------------------------------------------------------------------------------------- */
 
-    /** @var ModuleHookList $hooks */
-    private ModuleHookList $hooks;
+    /** @var ModuleHookList|null $hooks */
+    private ModuleHookList|null $hooks = null;
 
     /**
      * @return ModuleHookList
@@ -45,8 +45,8 @@ trait ModuleInplementation
         return $this->hooks;
     }
 
-    /** @var ModuleConfigurationList $configuration */
-    private ModuleConfigurationList $configuration;
+    /** @var ModuleConfigurationList|null $configuration */
+    private ModuleConfigurationList|null $configuration = null;
 
     /**
      * @return ModuleConfigurationList

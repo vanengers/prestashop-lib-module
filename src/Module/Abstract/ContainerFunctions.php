@@ -2,20 +2,22 @@
 
 namespace Vanengers\PrestashopLibModule\Module\Abstract;
 
+use Context;
+use Exception;
+use PrestaShop\PrestaShop\Adapter\ContainerFinder;
+use PrestaShop\PrestaShop\Core\Exception\ContainerNotFoundException;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Throwable;
+use Tools;
 
 trait ContainerFunctions
 {
-    /**
-     * @var Container
-     */
-    private Container $moduleContainer;
-
     /**
      * @return void
      */
@@ -26,39 +28,60 @@ trait ContainerFunctions
     }
 
     /**
-     * @return Container
+     * @param $serviceName
+     * @throws Exception
+     * @since 11-09-2023
+     * @author George van Engers <george@dewebsmid.nl>
      */
-    public function getContainer() : Container
+    public function getService($serviceName)
     {
-        return $this->moduleContainer;
+        $result = false;
+        try {
+            if (method_exists($this, 'get')) {
+                $result = $this->get($serviceName);
+            }
+            if (!$result && Context::getContext()->controller) {
+                if (property_exists(Context::getContext()->controller, 'get')) {
+                    $controller = Context::getContext()->controller;
+                    $result = $controller->get($serviceName);
+                }
+            }
+            if (!$result) {
+                $container = $this->getAwareContainer();
+                $result = $container->get($serviceName);
+            }
+        } catch (Throwable) {
+            // check fallback? -> baseService executing new baseService derived from this trait
+            if (property_exists($this, 'api') && property_exists($this, 'logger')) {
+                try {
+                    $result = new $serviceName($this->api, $this->logger);
+                }
+                catch (Throwable) {}
+            }
+        }
+        finally {
+            if (Tools::isSubmit('debug') && Tools::isSubmit('debug_di')) {
+                dump([$serviceName, $result != false]);
+            }
+            return $result;
+        }
     }
 
+    private ContainerInterface|null $containerAware = null;
+
     /**
-     * @return void
-     * @throws \Exception
+     * @return ContainerInterface
+     * @throws ContainerNotFoundException
+     * @since 11-09-2023
+     * @author George van Engers <george@dewebsmid.nl>
      */
-    private function compile(): void
+    public function getAwareContainer(): ContainerInterface
     {
-        $containerCache = $this->getLocalPath().'var/cache/container.php';
-        $containerConfigCache = new ConfigCache($containerCache, _PS_MODE_DEV_);
-
-        $containerClass = get_class($this).'Container';
-
-        if (!$containerConfigCache->isFresh()) {
-            $containerBuilder = new ContainerBuilder();
-            $locator = new FileLocator(dirname(__FILE__).'/config');
-            $loader  = new YamlFileLoader($containerBuilder, $locator);
-            $loader->load('local.yml');
-            $containerBuilder->compile();
-            $dumper = new PhpDumper($containerBuilder);
-
-            $containerConfigCache->write(
-                $dumper->dump(['class' => $containerClass]),
-                $containerBuilder->getResources()
-            );
+        if (null === $this->containerAware) {
+            $finder = new ContainerFinder(Context::getContext());
+            $this->containerAware = $finder->getContainer();
         }
 
-        require_once $containerCache;
-        $this->moduleContainer = new $containerClass();
+        return $this->containerAware;
     }
 }

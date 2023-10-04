@@ -10,7 +10,7 @@ trait MigrationFunctions
     public function getMigrator() : DatabaseMigrator
     {
         /** @var DatabaseMigrator $service */
-        $service = $this->getContainer()->get('vanengers.base_module.lib.migrator');
+        $service = $this->getService('vanengers.base_module.lib.migrator');
         $service->init($this);
 
         return $service;

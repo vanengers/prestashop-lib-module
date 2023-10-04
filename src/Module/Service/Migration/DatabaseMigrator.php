@@ -3,8 +3,8 @@
 namespace Vanengers\PrestashopLibModule\Module\Service\Migration;
 
 use Db;
+use Module;
 use Throwable;
-use Vanengers\PrestashopLibModule\Module\BaseModule;
 
 /**
  * Place the migration files inside root/sql folder of your module.
@@ -17,15 +17,15 @@ use Vanengers\PrestashopLibModule\Module\BaseModule;
 class DatabaseMigrator
 {
     /**
-     * @var BaseModule
+     * @var Module
      */
-    private BaseModule $module;
+    private Module $module;
 
     /**
-     * @param BaseModule $module
+     * @param Module $module
      * @return bool
      */
-    public function init(BaseModule $module) : bool
+    public function init(Module $module) : bool
     {
         $this->module = $module;
 
@@ -86,11 +86,27 @@ class DatabaseMigrator
     private function currentlyAtMigration(): mixed
     {
         if ($this->tableExists(_DB_PREFIX_.$this->module->name.'_migration')) {
-            $result = Db::getInstance()->getRow('SELECT * FROM '._DB_PREFIX_.$this->module.'_migration ORDER BY id DESC LIMIT 1');
-            return $result['filename'];
-        } else {
-            return null;
+            $result = Db::getInstance()->executeS('SELECT * FROM '._DB_PREFIX_.$this->module->name.'_migration ORDER BY id DESC LIMIT 1');
+            if (count($result) > 0) {
+                return (int) $this->getTimestampFromFileName($result[0]['filename']);
+            }
         }
+
+        return null;
+    }
+
+    /**
+     * @param $fileName
+     * @return int
+     * @author George van Engers <george@dewebsmid.nl>
+     * @since 04-10-2023
+     */
+    private function getTimestampFromFileName($fileName)
+    {
+        $split = explode('-', $fileName);
+        $fNameExplode = explode('/',$split[0]);
+        $format = (int) trim($fNameExplode[count($fNameExplode)-1]);
+        return $format;
     }
 
     /**
@@ -134,12 +150,12 @@ class DatabaseMigrator
     private function tableExists($table): bool
     {
         try {
-            $result = Db::getInstance()->query("SHOW TABLES LIKE '".$table."'");
+            $result = Db::getInstance()->executeS("SHOW TABLES LIKE '".$table."'");
         } catch (Throwable $e) {
             return FALSE;
         }
 
-        return $result !== FALSE;
+        return count($result) > 0;
     }
 
     /**
@@ -156,10 +172,9 @@ class DatabaseMigrator
 
         foreach($installSqlFiles as $file) {
             /* Format: YYYYMMDDHHMM - Type - TableName.sql */
-            $split = explode('-', $file);
-            $format = (int) trim($split[0]);
+            $format = $this->getTimestampFromFileName($file);
             if ($format > $current_migration) {
-                $returnable[$format] = $folder . $file;
+                $returnable[$format] = $file;
             }
         }
 

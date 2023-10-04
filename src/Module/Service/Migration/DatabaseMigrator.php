@@ -4,6 +4,7 @@ namespace Vanengers\PrestashopLibModule\Module\Service\Migration;
 
 use Db;
 use Module;
+use PrestaShopDatabaseException;
 use Throwable;
 
 /**
@@ -80,10 +81,11 @@ class DatabaseMigrator
 
     /**
      * @return mixed|null
-     * @author George van Engers <george@dewebsmid.nl>
+     * @throws PrestaShopDatabaseException
      * @since 26-09-2023
+     * @author George van Engers <george@dewebsmid.nl>
      */
-    private function currentlyAtMigration(): mixed
+    private function currentlyAtMigration(): int|null
     {
         if ($this->tableExists(_DB_PREFIX_.$this->module->name.'_migration')) {
             $result = Db::getInstance()->executeS('SELECT * FROM '._DB_PREFIX_.$this->module->name.'_migration ORDER BY id DESC LIMIT 1');
@@ -110,6 +112,7 @@ class DatabaseMigrator
     }
 
     /**
+     * @todo Match only files with pattern. Use regex here.
      * @param $current_migration
      * @return array
      * @author George van Engers <george@dewebsmid.nl>
